@@ -8,9 +8,8 @@ $(document).ready(function() {
         var photos = data.photos;
         $.each(photos, function(index, photo) {
           $('.photo-container').append('<img src="' + photo.url + '"' + '>');
-        })
+        });
       }
-    })
-
+    });
   })
 })
