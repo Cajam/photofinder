@@ -59,25 +59,18 @@ function getValueFromCookie(valueName, cookie){
 
 app.get("/mail", function(request, response){
   var token = getValueFromCookie('app-token', request.headers.cookie);
-  console.log("Token found in cookie");
+  // console.log("Token found in cookie: ", token);
   var email = getValueFromCookie('app-email', request.headers.cookie);
-  console.log("Email found in cookie: ", email);
+  // console.log("Email found in cookie: ", email);
   if (token) {
     response.writeHead(200, {"Content-Type": "text/html"});
-    response.write("<div><h1>Your Inbox</h1></div>");
-
-    var queryParams = {
-      '$select': 'Subject,ReceivedDateTime,From',
-      '$orderby': 'ReceivedDateTime desc',
-      '$top': 10
-    };
+    response.write("<br/><h2>Cassidy's Awesome Outlook E-mail Getter</h2><br/><h3>We should be console logging your e-mail and calendar events right now...</h3>");
 
     // Set the API endpoint to use the v2.0 endpoint
     outlook.base.setApiEndpoint('https://outlook.office.com/api/v2.0');
     // Set the anchor mailbox to the user's SMTP address
-    outlook.base.setAnchorMailbox(email);
 
-    outlook.mail.getMessages({token: token, odataParams: queryParams},
+    outlook.mail.getMessages({token: token},
       function(error, result){
         if (error) {
           console.log('getMessages returned an error: ' + error);
@@ -85,18 +78,26 @@ app.get("/mail", function(request, response){
           response.end();
         }
         else if (result) {
-          console.log('getMessages returned ' + result.value.length + ' messages.');
-          response.write('<table><tr><th>From</th><th>Subject</th><th>Received</th></tr>');
-          result.value.forEach(function(message){
-            var from = message.From ? message.From.EmailAddress.Name : "NONE";
-            response.write('<tr><td>' + from + '</td><td>' + message.Subject +
-            '</td><td>' + message.ReceivedDateTime.toString() + '</td></tr>');
-          });
-
-          response.write('</table>');
-          response.end();
+          console.log("E-mail to be stored is: " + email);
+// PUT IT IN MONGO HERE ***********************************************************
         }
       });
+
+    outlook.calendar.getEvents({token: token},
+      function(error, result){
+        if (error) {
+          console.log("getEvents returned an error: " + error);
+          response.write("<p>Error: " + error + "</p>");
+          response.end();
+        }
+        else if (result) {
+          console.log("getEvents returned calendar stuff successfully");
+          result.value.forEach(function(event) {
+            console.log("Subject: " + event.Subject);
+          });
+        }
+      });
+      response.end();
   }
   else {
     response.writeHead(200, {"Content-Type": "text/html"});
