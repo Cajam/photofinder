@@ -12,10 +12,7 @@ var oauth2 = require("simple-oauth2")(credentials);
 var redirectUri = "http://localhost:8000/authorize";
 
 // The scopes the app requires
-var scopes = [ "openid",
-               "https://outlook.office.com/mail.read",
-               "https://outlook.office.com/calendars.read",
-              "https://outlook.office.com/contacts.read"];
+var scopes = [ "openid", "profile", "email", "https://outlook.office.com/mail.read", "https://outlook.office.com/calendars.read", "https://outlook.office.com/contacts.read"];
 
 function getAuthUrl() {
   var returnVal = oauth2.authCode.authorizeURL({
@@ -38,7 +35,7 @@ function getTokenFromCode(auth_code, callback, response){
       callback(response, error, null);
     } else {
       token = oauth2.accessToken.create(result);
-      console.log("Token created: ", token.token);
+      // console.log("Token created");
       callback(response, null, token);
     }
   });
@@ -55,6 +52,8 @@ function getEmailFromIdToken(id_token){
 
   var jwt = JSON.parse(decoded_token);
 
+  // Store the user's e-mail in a variable
+  var userEmail = jwt.preferred_username;
   // Email is in the preferred_username field
   return jwt.preferred_username
 }

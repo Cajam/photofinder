@@ -10,8 +10,8 @@ var app = express();
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname));
 
-app.listen(8080, function(){
-  console.log("app listening on port 8080");
+app.listen(8000, function(){
+  console.log("app listening on port 8000");
 });
 
 app.get("/", function(req, res){
@@ -28,7 +28,7 @@ app.get("/authorize", function(req, res){
   // Pass authorization code as a query paramter
   var url_parts = url.parse(req.url, true);
   var code = url_parts.query.code;
-  console.log("Code: " + code);
+  // console.log("Code: " + code);
   authHelper.getTokenFromCode(code, tokenReceived, res);
 });
 
@@ -59,7 +59,7 @@ function getValueFromCookie(valueName, cookie){
 
 app.get("/mail", function(request, response){
   var token = getValueFromCookie('app-token', request.headers.cookie);
-  console.log("Token found in cookie: ", token);
+  console.log("Token found in cookie");
   var email = getValueFromCookie('app-email', request.headers.cookie);
   console.log("Email found in cookie: ", email);
   if (token) {
@@ -88,7 +88,6 @@ app.get("/mail", function(request, response){
           console.log('getMessages returned ' + result.value.length + ' messages.');
           response.write('<table><tr><th>From</th><th>Subject</th><th>Received</th></tr>');
           result.value.forEach(function(message){
-            console.log(' Subject: ' + message.Subject);
             var from = message.From ? message.From.EmailAddress.Name : "NONE";
             response.write('<tr><td>' + from + '</td><td>' + message.Subject +
             '</td><td>' + message.ReceivedDateTime.toString() + '</td></tr>');
