@@ -64,11 +64,16 @@ app.get("/mail", function(request, response){
   // console.log("Email found in cookie: ", email);
   if (token) {
     response.writeHead(200, {"Content-Type": "text/html"});
-    response.write("<br/><h2>Cassidy's Awesome Outlook E-mail Getter</h2><br/><h3>We should be console logging your e-mail and calendar events right now...</h3>");
+    response.write("<br/><h2>Cassidy's Awesome Outlook E-mail Getter</h2>");
 
     // Set the API endpoint to use the v2.0 endpoint
     outlook.base.setApiEndpoint('https://outlook.office.com/api/v2.0');
     // Set the anchor mailbox to the user's SMTP address
+    outlook.base.setAnchorMailbox(email);
+    // Set the preferred time zone.
+    // The API will return event date/times in this time zone.
+    outlook.base.setPreferredTimeZone('Eastern Standard Time');
+
 
     outlook.mail.getMessages({token: token},
       function(error, result){
@@ -78,12 +83,18 @@ app.get("/mail", function(request, response){
           response.end();
         }
         else if (result) {
-          console.log("E-mail to be stored is: " + email);
+          console.log("Current user e-mail is: " + email);
 // PUT IT IN MONGO HERE ***********************************************************
         }
       });
 
-    outlook.calendar.getEvents({token: token},
+      var queryParams = {
+        // '$select': 'Subject,Start,End,Attendees',
+        '$orderby': 'Start/DateTime',
+        '$top': 1
+      };
+
+    outlook.calendar.getEvents({token: token, odataParams: queryParams},
       function(error, result){
         if (error) {
           console.log("getEvents returned an error: " + error);
@@ -91,9 +102,22 @@ app.get("/mail", function(request, response){
           response.end();
         }
         else if (result) {
-          console.log("getEvents returned calendar stuff successfully");
-          result.value.forEach(function(event) {
-            console.log("Subject: " + event.Subject);
+          console.log("getEvents returned: " + result.value.length + " event(s).");
+
+          result.value.forEach(function(event){
+            var subject = event.Subject;
+            var eventTime = new Date(event.Start.DateTime);
+            var organizerName = event.Organizer.EmailAddress.Name;
+            var organizerEmail = event.Organizer.EmailAddress.Address;
+
+            // List the Outlook event information
+            console.log(" Event: " + subject + " at " + eventTime + "\n" +
+            " Organizer: " + organizerName + " at " + organizerEmail);
+
+            // List the attendees
+            for(var i=1; i < event.Attendees.length; i++){
+              console.log(" Attending: " + event.Attendees[i].EmailAddress.Name + " at " + event.Attendees[i].EmailAddress.Address);
+            }
           });
         }
       });
